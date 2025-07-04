@@ -33,7 +33,7 @@ jobs:
         python svg2png.py -i codigo_de_conducta.svg -o codigo_de_conducta.png
 
     - name: Subir imagen como artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: codigo_de_conducta_png
         path: codigo_de_conducta.png
