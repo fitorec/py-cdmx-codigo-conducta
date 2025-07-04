@@ -1,0 +1,39 @@
+name: Generar PNG del Código de Conducta
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Clonar repositorio
+      uses: actions/checkout@v3
+
+    - name: Instalar dependencias del sistema
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libcairo2 libpango-1.0-0 libgdk-pixbuf2.0-0 libffi-dev python3-venv
+
+    - name: Configurar entorno Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Instalar dependencias Python
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Generar imagen PNG desde SVG
+      run: |
+        python svg2png.py -i codigo_de_conducta.svg -o codigo_de_conducta.png
+
+    - name: Subir imagen como artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: codigo_de_conducta_png
+        path: codigo_de_conducta.png
