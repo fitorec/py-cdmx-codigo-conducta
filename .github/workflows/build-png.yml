@@ -1,4 +1,4 @@
-name: Generar PNG del Código de Conducta
+name: Generar y publicar PNG del Código de Conducta
 
 on:
   push:
@@ -6,12 +6,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # Necesario para crear releases y subir assets
 
     steps:
     - name: Clonar repositorio
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Instalar dependencias del sistema
       run: |
@@ -19,7 +22,7 @@ jobs:
         sudo apt-get install -y libcairo2 libpango-1.0-0 libgdk-pixbuf2.0-0 libffi-dev python3-venv
 
     - name: Configurar entorno Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -32,8 +35,17 @@ jobs:
       run: |
         python svg2png.py -i codigo_de_conducta.svg -o codigo_de_conducta.png
 
-    - name: Subir imagen como artifact
-      uses: actions/upload-artifact@v4
+    - name: Obtener fecha y hash corto
+      id: vars
+      run: |
+        echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Crear release automática
+      uses: softprops/action-gh-release@v2
       with:
-        name: codigo_de_conducta_png
-        path: codigo_de_conducta.png
+        tag_name: auto-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+        name: Build ${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+        body: |
+          Release generado automáticamente por GitHub Actions.
+        files: codigo_de_conducta.png
